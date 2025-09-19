@@ -59,4 +59,4 @@ Flow:
 
 ## UML Диаграмма
 
-![Flow Diagram](uml_diagram_second.png)
+![Flow Diagram](uml_diagram_third.png)

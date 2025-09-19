@@ -15,7 +15,6 @@ rectangle "Система HR/Подбора-кандидатов" {
   usecase "Экспорт брифа в PDF" as UC8
   usecase "Выбор поиска по умолчанию" as UC9
   usecase "Выбор поиска по критериям" as UC10
-  usecase "Выбор критериев" as UC11
 }
 
 ' --- Связи акторов ---
@@ -34,5 +33,5 @@ LLM -- UC8
 ' --- include / extend ---
 UC2 .> UC9 : <<include>>
 UC2 .> UC10 : <<include>>
-UC11 .> UC2 : <<extend>>
+
 @enduml

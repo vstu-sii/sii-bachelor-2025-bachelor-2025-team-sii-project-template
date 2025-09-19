@@ -60,4 +60,4 @@ Flow:
 
 ## UML Диаграмма
 
-![Flow Diagram](uml_diagram_4new2.png)
+![Flow Diagram](uml_diagram_4new3.png)

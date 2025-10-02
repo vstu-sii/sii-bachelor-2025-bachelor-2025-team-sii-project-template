@@ -1,34 +1,37 @@
 @startuml
 left to right direction
 actor "Пользователь" as User
-actor "ATS/HRM-система" as ATS
+actor "AI HR Assistant" as System
 actor "LLM (ИИ-модуль для составления вопросов)" as LLM
 
 rectangle "Система HR/Подбора-кандидатов" {
-  usecase "Загрузить вакансию" as UC1
-  usecase "Выбрать вариант поиска кандидатов(по критериям или по умолчанию)" as UC2
-  usecase "Парсинг платформ и материалов" as UC3
-  usecase "Отображение кандидатов" as UC4
+  usecase "Загрузить вакансию и резюме" as UC1
+  usecase "Выбрать вариант поиска" as UC2
+  usecase "Парсинг резюме и материалов" as UC3
+  usecase "Анализ соответствия и ранжирование" as UC4
   usecase "Выбор кандидатов для собеседования" as UC5
   usecase "Генерация вопросов и плана интервью" as UC6
-  usecase "Отображение персонализированных вопросов" as UC7
   usecase "Экспорт брифа в PDF" as UC8
-  usecase "Выбор поиска по умолчанию" as UC9
-  usecase "Выбор поиска по критериям" as UC10
+}
+
+rectangle "Варианты поиска" {
+  usecase "Поиск по умолчанию" as UC9
+  usecase "Поиск по критериям" as UC10
 }
 
 ' --- Связи акторов ---
 User -- UC1
 User -- UC2
 User -- UC5
-ATS -- UC1
-ATS -- UC2
-ATS -- UC3
-ATS -- UC4
-ATS -- UC5
+System -- UC1
+System -- UC2
+System -- UC3
+System -- UC4
+System -- UC5
+System -- UC6
+System -- UC8
 LLM -- UC6
-LLM -- UC7
-LLM -- UC8
+LLM -- UC4
 
 ' --- include / extend ---
 UC2 .> UC9 : <<include>>

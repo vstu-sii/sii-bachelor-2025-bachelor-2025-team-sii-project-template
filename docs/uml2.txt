@@ -5,36 +5,59 @@ actor "AI HR Assistant" as System
 actor "LLM (ИИ-модуль для составления вопросов)" as LLM
 
 rectangle "Система HR/Подбора-кандидатов" {
-  usecase "Загрузить вакансию и резюме" as UC1
+  usecase "Загрузить/Выбрать вакансию" as UC1
   usecase "Выбрать вариант поиска" as UC2
   usecase "Парсинг резюме и материалов" as UC3
   usecase "Анализ соответствия и ранжирование" as UC4
   usecase "Выбор кандидатов для собеседования" as UC5
   usecase "Генерация вопросов и плана интервью" as UC6
   usecase "Экспорт брифа в PDF" as UC8
+  usecase "Загрузить/Выбрать пакет резюме" as UC13
+  usecase "Парсинг вакансии" as UC16
 }
 
 rectangle "Варианты поиска" {
   usecase "Поиск по умолчанию" as UC9
   usecase "Поиск по критериям" as UC10
 }
-
+rectangle "Загрузить/Выбрать вакансию" {
+  usecase "Загрузить вакансию" as UC11
+  usecase "Выбрать вакансию из имеющихся" as UC12
+}
+rectangle "Загрузить/Выбрать пакет резюме" {
+  usecase "Загрузить вакансию" as UC14
+  usecase "Выбрать вакансию из имеющихся" as UC15
+}
 ' --- Связи акторов ---
 User -- UC1
+User -- UC13
 User -- UC2
 User -- UC5
 System -- UC1
+System -- UC3
 System -- UC2
 System -- UC3
 System -- UC4
 System -- UC5
 System -- UC6
 System -- UC8
+System -- UC16
 LLM -- UC6
 LLM -- UC4
 
 ' --- include / extend ---
 UC2 .> UC9 : <<include>>
 UC2 .> UC10 : <<include>>
-
+UC1 .> UC11 : <<include>>
+UC1 .> UC12 : <<include>>
+UC13 .> UC14 : <<include>>
+UC13 .> UC15 : <<include>>
+UC16 .> UC1 : <<extend>>
+UC13 .> UC16 : <<extend>>
+UC2 .> UC13 : <<extend>>
+UC3 .> UC2 : <<extend>>
+UC4 .> UC3 : <<extend>>
+UC5 .> UC4 : <<extend>>
+UC6 .> UC5 : <<extend>>
+UC8 .> UC6 : <<extend>>
 @enduml

@@ -2,7 +2,7 @@
 
 ## UML Диаграмма
 
-![Flow Diagram](uml_use_case_diagram.png)
+![Flow Diagram](uml_diagram_full.png)
 
 Цель:\
 Ускорение процесса отбора кандидатов и повышение качества найма через автоматизацию первичной оценки.

@@ -176,9 +176,3 @@ INDEX idx_period_range (period_start, period_end) ON Анализы
 INDEX idx_sentiment_score (sentiment_score) ON РезультатыАнализа
 INDEX idx_rating_change (rating_change) ON Анализы
 ```
-<img width="1211" height="1186" alt="image" src="https://github.com/user-attachments/assets/4bf0e484-fc3d-4841-9c15-26594ec932a4" /> <img width="916" height="1012" alt="image" src="https://github.com/user-attachments/assets/8bdc6fcd-dd7f-4b6b-80af-9f6188fb546b" />
-
-
-
-
-

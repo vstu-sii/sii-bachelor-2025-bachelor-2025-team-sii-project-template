@@ -38,11 +38,6 @@ API для анализа отзывов о товарах с маркетпле
 - Rate-limiting для защиты от злоупотреблений
 - Стандартизированные коды ответов
 
-## Базовый URL
-
-- Production: `https://api.reviews-analysis.com/v1`
-- Staging: `https://staging-api.reviews-analysis.com/v1`
-
 ## Пример использования
 
 ```bash

@@ -1,1 +1,97 @@
+openapi: 3.0.3
+info:
+  title: Product Reviews Analysis API
+  description: API для анализа отзывов о товарах с маркетплейсов
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@reviews-analysis.com
 
+servers:
+  - url: https://api.reviews-analysis.com/v1
+    description: Production server
+  - url: https://staging-api.reviews-analysis.com/v1
+    description: Staging server
+
+paths:
+  /auth/telegram:
+    post:
+      summary: Регистрация и вход через Telegram
+      description: Аутентификация пользователя через Telegram Widget
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramAuthRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Неверные данные аутентификации
+        '409':
+          description: Пользователь уже существует (при регистрации)
+        '500':
+          description: Ошибка сервера
+      x-rate-limit:
+        window: 900
+        max: 5
+
+  /auth/logout:
+    post:
+      summary: Выход из системы
+      description: Завершение сессии пользователя
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out"
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+
+  /products:
+    get:
+      summary: Получить список проанализированных товаров
+      description: Возвращает список товаров пользователя с краткой информацией
+      tags:
+        - Products
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Успешное получение списка товаров
+          content:
+            application/json:
+              schema

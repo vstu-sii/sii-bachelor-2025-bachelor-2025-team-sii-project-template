@@ -1,127 +1,49 @@
-version: "3.9"
-
 services:
-  # ========================================
-  # 💻 FRONTEND — Next.js
-  # ========================================
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: auto-flashcards-frontend
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-    command: npm run dev
-    networks:
-      - auto-flashcards-net
-
-  # ========================================
-  # 🧠 BACKEND — FastAPI
-  # ========================================
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: auto-flashcards-backend
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - llm
-    volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    networks:
-      - auto-flashcards-net
-
-  # ========================================
-  # 🗄️ DATABASE — PostgreSQL
-  # ========================================
   db:
-    image: postgres:15
-    container_name: auto-flashcards-db
-    restart: always
-    env_file:
-      - .env
+    image: postgres:16
+    container_name: mlops_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
     ports:
       - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    networks:
-      - auto-flashcards-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
-  # ========================================
-  # 🤖 LLM SERVICE — llama.cpp
-  # ========================================
-  llm:
-    image: ghcr.io/abetlen/llama-cpp-python:latest
-    container_name: auto-flashcards-llm
-    ports:
-      - "5000:5000"
+  api:
+    image: python:3.11-alpine
+    container_name: mlops_api
+    working_dir: /app
+    command: ["sh", "-c", "python -m http.server ${API_PORT:-8000}"]
     volumes:
-      - ./models:/models
-    environment:
-      MODEL: /models/llama-2-7b.Q4_K_M.gguf
-    command: >
-      python3 -m llama_cpp.server
-      --model ${MODEL}
-      --host 0.0.0.0
-      --port 5000
-    networks:
-      - auto-flashcards-net
-
-  # ========================================
-  # 📊 MONITORING — Prometheus & Grafana
-  # ========================================
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../:/app:ro
+    env_file:
+      - ../.env
     ports:
-      - "9090:9090"
-    networks:
-      - auto-flashcards-net
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3001:3000"
+      - "${API_PORT:-8000}:8000"
     depends_on:
-      - prometheus
-    networks:
-      - auto-flashcards-net
+      db:
+        condition: service_healthy
 
-  # ========================================
-  # 🧪 JUPYTER LAB (optional)
-  # ========================================
-  jupyter:
-    image: jupyter/base-notebook:latest
-    container_name: jupyter-lab
+  frontend:
+    image: nginx:alpine
+    container_name: mlops_frontend
     ports:
-      - "8888:8888"
-    volumes:
-      - ./notebooks:/home/jovyan/work
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - api
+
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: mlops_jupyter
     environment:
-      JUPYTER_TOKEN: dev123
-    networks:
-      - auto-flashcards-net
-
-# ========================================
-# 📦 VOLUMES & NETWORK
-# ========================================
-volumes:
-  pg_data:
-
-networks:
-  auto-flashcards-net:
-    driver: bridge
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN}
+    ports:
+      - "${JUPYTER_PORT:-8888}:8888"
+    volumes:
+      - ../notebooks:/home/jovyan/work
+    command: start-notebook.sh --NotebookApp.token=${JUPYTER_TOKEN}

@@ -19,17 +19,26 @@ foreach ($url in @("http://localhost:8000","http://localhost:3000")) {
 }
 Pop-Location
 
+# --- Monitoring block (modified) ---
 Push-Location ".\monitoring"
 docker compose up -d
 Start-Sleep -Seconds 5
-foreach ($url in @("http://localhost:9090","http://localhost:3001")) {
+
+function ProbeGet($url) {
   try {
-    $resp = Invoke-WebRequest -UseBasicParsing -Uri $url -Method Head -TimeoutSec 5
-    Write-Host "$url -> $($resp.StatusCode)"
+    $resp = Invoke-WebRequest -UseBasicParsing -Uri $url -Method Get -TimeoutSec 6
+    Write-Host "$url -> $($resp.StatusCode)"; return $true
   } catch {
-    Write-Warning "$url not reachable"; $ok = $false
+    Write-Warning "$url unreachable"; return $false
   }
 }
+
+$ok = (ProbeGet "http://localhost:9090/-/ready")   -and $ok
+$ok = (ProbeGet "http://localhost:9090/-/healthy") -and $ok
+$ok = (ProbeGet "http://localhost:3001")           -and $ok
+
 Pop-Location
+# --- end monitoring block ---
 
 if ($ok) { Write-Host "`nALL GOOD ✅" -ForegroundColor Green } else { Write-Host "`nSome checks failed ❌" -ForegroundColor Red }
+

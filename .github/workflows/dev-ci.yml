@@ -1,0 +1,24 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+jobs:
+  lint-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Redocly CLI
+        run: npm i -g @redocly/cli
+      - name: Lint OpenAPI (if present)
+        run: |
+          if [ -f api/openapi.yaml ]; then
+            redocly lint api/openapi.yaml
+          else
+            echo "api/openapi.yaml not found — skipping OpenAPI lint."
+          fi

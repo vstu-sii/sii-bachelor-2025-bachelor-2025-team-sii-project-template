@@ -3,7 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import ai  # 👈 إضافة مهمّة
+from .routers import ai, decks  # импортируем оба роутера: AI и Decks
+
 
 # Создаём экземпляр FastAPI-приложения
 app = FastAPI(
@@ -31,4 +32,6 @@ async def health_check() -> dict:
     return {"status": "ok"}
 
 
+# Подключаем роутеры
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
+app.include_router(decks.router, prefix="/decks", tags=["decks"])

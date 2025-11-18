@@ -1,0 +1,291 @@
+openapi: 3.0.0
+info:
+  title: Digital Twin API
+  version: 1.0.0
+  description: API для управления цифровыми двойниками и отчетами
+
+paths:
+  /sign-in:
+    post:
+      summary: Вход пользователя
+      description: Позволяет пользователю войти в систему, используя логин и пароль.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "password123"
+              required:
+                - login
+                - password
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: string
+                    example: "session_token_123"
+        '400':
+          description: Ошибка при входе
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid login or password"
+
+  /sign-up:
+    post:
+      summary: Регистрация нового пользователя
+      description: Регистрация нового пользователя с указанием пароля и подтверждения пароля.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  example: "password123"
+                change_password:
+                  type: string
+                  example: "password123"
+              required:
+                - login
+                - password
+                - change_password
+      responses:
+        '201':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: string
+                    example: "session_token_123"
+        '400':
+          description: Ошибка при регистрации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Passwords do not match"
+
+  /flat/add:
+    post:
+      summary: Создание цифрового двойника квартиры
+      description: Создает новый цифровой двойник для квартиры, загружая файлы и указывая имя.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flat_name:
+                  type: string
+                  example: "Квартира 101"
+              required:
+                - flat_name
+      responses:
+        '201':
+          description: Успешно создан цифровой двойник
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 123
+
+  /flat/all:
+    get:
+      summary: Получить список всех цифровых двойников
+      description: Возвращает список всех квартир с минимальной информацией (ссылка на фото, имя, id).
+      responses:
+        '200':
+          description: Список цифровых двойников
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    url_photo:
+                      type: string
+                      example: "https://example.com/photo.jpg"
+                    flat_name:
+                      type: string
+                      example: "Квартира 101"
+                    id:
+                      type: integer
+                      example: 123
+
+  /flat/{id}/:
+    get:
+      summary: Получить полную информацию о квартире
+      description: Возвращает полную информацию о квартире по её ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Полная информация о квартире
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url_photo:
+                          type: string
+                          example: "https://example.com/photo1.jpg"
+                  name:
+                    type: string
+                    example: "Квартира 101"
+                  id:
+                    type: integer
+                    example: 123
+
+    delete:
+      summary: Удалить квартиру по ID
+      description: Удаляет цифровой двойник квартиры по её ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '204':
+          description: Успешно удалено
+
+  /report/add:
+    post:
+      summary: Создание отчёта
+      description: Создает новый отчет для квартиры, загружая файлы.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flat_id:
+                  type: integer
+                  example: 123
+              required:
+                - flat_id
+      responses:
+        '201':
+          description: Успешно создан отчёт
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 456
+
+  /report/all:
+    get:
+      summary: Получить все отчеты
+      description: Возвращает список всех отчетов с минимальной информацией (ссылка на фото, id).
+      responses:
+        '200':
+          description: Список отчётов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    url_photo:
+                      type: string
+                      example: "https://example.com/photo.jpg"
+                    id:
+                      type: integer
+                      example: 456
+
+  /report/{id}/:
+    get:
+      summary: Получить полную информацию о конкретном отчете
+      description: Возвращает полную информацию о отчете по его ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 456
+      responses:
+        '200':
+          description: Полная информация о отчете
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url_photo:
+                          type: string
+                          example: "https://example.com/photo1.jpg"
+                        text:
+                          type: string
+                          example: "Описание отчета"
+                  id:
+                    type: integer
+                    example: 456
+
+    delete:
+      summary: Удалить отчет по ID
+      description: Удаляет отчет по его ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 456
+      responses:
+        '204':
+          description: Успешно удалено

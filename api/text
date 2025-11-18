@@ -1,0 +1,92 @@
+/sign-in  - вход (post)
+параметры на вход 
+body{
+ password: str
+ login: str
+}
+выход
+session: str
+
+/sign-up - регистрация (post)
+параметры на вход 
+body{
+ password: str
+ change_password: str
+ login: str
+}
+выход
+session: str
+
+
+/flat/add - создать цифрового двойника (post)
+list[files]
+body{
+ flat_name: str
+}
+выход
+id: int
+
+
+/flat/all - получить всех цифровых двойников, не полная информация (get)
+параметры на вход 
+-
+выход
+list[
+ {
+  url_photo: str (1я картинка из квартиры),
+  flat_name: str,
+  id: int 
+ }
+]
+/flat/{id}/ - получить полную информацию о конкретной квартире по id (get)
+параметры на вход 
+-
+выход
+{
+ photos: [
+  url_photo: str,
+ ],
+ name: str,
+ id: int,
+}
+
+/flat/{id}/ - удалить квартиру (delete)
+параметры на вход 
+-
+выход
+
+
+/report/add - создать отчёт (post)
+параметры на вход 
+list[files]
+body{
+ flat_id: int
+}
+выход
+id: int
+
+/report/all - получить все отчёты, не полная информация (get)
+параметры на вход
+выход
+list[
+ {
+  url_photo: str (1я картинка из квартиры),
+  id: int 
+ }
+]
+
+
+
+/report/{id}/ - получить полную информацию о конкретном отчёте по id (get)
+параметры на вход 
+-
+выход
+{
+ photos: [
+  url_photo: str,
+  text: str,
+ ],
+ id: int,
+}
+
+/report/{id}/ - удалить отчёт по id (delete)

@@ -43,3 +43,16 @@ openai
 langfuse
 pydantic
 jupyter
+
+### Установка:
+
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+### Переменные окружения
+export OPENAI_API_KEY="..."
+export LLM_MODEL_NAME="gpt-4.1-mini"          
+export LANGFUSE_PUBLIC_KEY="..."              
+export LANGFUSE_SECRET_KEY="..."
+export LANGFUSE_HOST="https://cloud.langfuse.com"

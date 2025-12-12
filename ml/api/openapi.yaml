@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Meal Planning API
+  description: API for generating meal plans, recipes, and shopping lists.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local server
+
+paths:
+  /generate_meal_plan:
+    post:
+      summary: Generate a meal plan
+      description: Creates a meal plan (breakfast, lunch, dinner) based on the provided parameters.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                forbidden_products:
+                  type: array
+                  items:
+                    type: string
+                  description: List of products to exclude.
+                available_products:
+                  type: array
+                  items:
+                    type: string
+                  description: List of available products.
+                target_calories:
+                  type: string
+                  enum: [low, medium, high]
+                  description: Target calorie level.
+      responses:
+        '200':
+          description: Meal plan successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  breakfast:
+                    type: array
+                    items:
+                      type: string
+                  lunch:
+                    type: array
+                    items:
+                      type: string
+                  dinner:
+                    type: array
+                    items:
+                      type: string
+
+  /generate_recipe:
+    post:
+      summary: Generate a recipe
+      description: Creates a recipe for a given dish, considering forbidden products.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product:
+                  type: string
+                  description: Name of the product to generate a recipe for.
+                forbidden_products:
+                  type: array
+                  items:
+                    type: string
+                  description: List of products that should not be included in the recipe.
+      responses:
+        '200':
+          description: Recipe successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recipe:
+                    type: string
+                    description: The recipe text
+
+  /generate_shopping_list:
+    post:
+      summary: Generate shopping list
+      description: Creates a shopping list based on selected dishes and forbidden products.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dishes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of dish names.
+                forbidden_products:
+                  type: array
+                  items:
+                    type: string
+                  description: List of products to exclude.
+      responses:
+        '200':
+          description: Shopping list successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shopping_list:
+                    type: array
+                    items:
+                      type: string

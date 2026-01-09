@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -11,20 +11,22 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 
 
 class Slide(BaseModel):
-    id: int = Field(..., description="Порядковый номер слайда")
-    section: str = Field(..., description="Тип секции (Problem, Solution, Market и т.п.)")
-    title: str = Field(..., description="Заголовок слайда")
-    bullets: List[str] = Field(..., description="Краткие тезисы")
+    id: int
+    section: str
+    title: str
+    bullets: List[str]
+
+
+class Deck(BaseModel):
+    slides: List[Slide]
 
 
 class GenerateDeckRequest(BaseModel):
-    brief: str = Field(..., min_length=20, description="Описание стартапа на английском")
-    target_slide_count: int = Field(
-        10, ge=4, le=20, description="Желаемое количество слайдов"
-    )
-    tone: str = Field("formal", description="Тон: formal / storytelling / technical")
-    audience: str = Field("early-stage VC", description="Целевая аудитория")
-    language: str = Field("en", description="Язык презентации (baseline: en)")
+    brief: str = Field(..., description="Free-text startup description")
+    target_slide_count: int = 10
+    tone: str = "formal"
+    audience: str = "early-stage VC"
+    language: str = "en"
 
 
 class GenerateDeckResponse(BaseModel):
@@ -32,70 +34,56 @@ class GenerateDeckResponse(BaseModel):
 
 
 class RegenerateSlideRequest(BaseModel):
-    brief: str = Field(..., min_length=20, description="Описание стартапа на английском")
-    existing_deck: Dict[str, Any] = Field(
-        ..., description='JSON дека в формате {"slides": [...]}'
-    )
-    slide_id: int = Field(..., ge=1, description="ID слайда для перегенерации")
-    tone: str = Field("formal", description="Тон")
-    audience: str = Field("early-stage VC", description="Целевая аудитория")
-    language: str = Field("en", description="Язык")
+    brief: str
+    existing_deck: Deck
+    slide_id: int = Field(..., gt=0)
+    tone: str = "formal"
+    audience: str = "early-stage VC"
+    language: str = "en"
 
 
-class RegenerateSlideResponse(Slide):
-    pass
+class RegenerateSlideResponse(BaseModel):
+    slide: Slide
 
 
-@router.get("/health", summary="Проверка работоспособности AI-модуля")
-async def health() -> Dict[str, str]:
+@router.get("/health")
+async def health() -> dict:
     return {"status": "ok"}
 
 
-@router.post(
-    "/generate-deck",
-    response_model=GenerateDeckResponse,
-    summary="Сгенерировать питч-дек",
-    description="Генерирует набор слайдов по описанию стартапа.",
-)
-async def generate_deck_endpoint(req: GenerateDeckRequest) -> Dict[str, Any]:
+@router.post("/generate-deck", response_model=GenerateDeckResponse)
+async def generate_deck_endpoint(payload: GenerateDeckRequest) -> GenerateDeckResponse:
     config = PitchDeckPromptConfig(
-        target_slide_count=req.target_slide_count,
-        tone=req.tone,
-        audience=req.audience,
-        language=req.language,
-    )
-    try:
-        deck = generate_deck(brief=req.brief, config=config)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return deck
-
-
-@router.post(
-    "/regenerate-slide",
-    response_model=RegenerateSlideResponse,
-    summary="Перегенерировать один слайд",
-    description="Улучшает конкретный слайд в рамках существующего дека.",
-)
-async def regenerate_slide_endpoint(req: RegenerateSlideRequest) -> Dict[str, Any]:
-    slides = req.existing_deck.get("slides")
-    if not isinstance(slides, list) or not slides:
-        raise HTTPException(status_code=400, detail="existing_deck.slides должен быть непустым списком")
-
-    config = PitchDeckPromptConfig(
-        target_slide_count=len(slides),
-        tone=req.tone,
-        audience=req.audience,
-        language=req.language,
+        target_slide_count=payload.target_slide_count,
+        tone=payload.tone,
+        audience=payload.audience,
+        language=payload.language,
     )
 
-    try:
-        slide = regenerate_slide(
-            brief=req.brief,
-            existing_deck=req.existing_deck,
-            slide_id=req.slide_id,
-            config=config,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return slide
+    deck_dict = generate_deck(payload.brief, config)
+    slides = [Slide(**s) for s in deck_dict["slides"]]
+    return GenerateDeckResponse(slides=slides)
+
+
+@router.post("/regenerate-slide", response_model=RegenerateSlideResponse)
+async def regenerate_slide_endpoint(
+    payload: RegenerateSlideRequest,
+) -> RegenerateSlideResponse:
+    if not payload.existing_deck.slides:
+        raise HTTPException(status_code=400, detail="existing_deck.slides is empty")
+
+    config = PitchDeckPromptConfig(
+        target_slide_count=len(payload.existing_deck.slides),
+        tone=payload.tone,
+        audience=payload.audience,
+        language=payload.language,
+    )
+
+    deck_dict = payload.existing_deck.model_dump()
+    new_slide_dict = regenerate_slide(
+        brief=payload.brief,
+        existing_deck=deck_dict,
+        slide_id=payload.slide_id,
+        config=config,
+    )
+    return RegenerateSlideResponse(slide=Slide(**new_slide_dict))

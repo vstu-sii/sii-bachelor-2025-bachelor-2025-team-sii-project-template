@@ -3,7 +3,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from openai import OpenAI
+import requests
 
 from ml.prompt_templates import (
     PitchDeckPromptConfig,
@@ -13,28 +13,60 @@ from ml.prompt_templates import (
 from ml.tracing.langfuse_config import get_langfuse_client
 
 
-_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not _OPENAI_API_KEY:
-    raise RuntimeError("Не установлен OPENAI_API_KEY в окружении")
+# ---------- конфиг провайдера LLM ----------
 
-_client = OpenAI(api_key=_OPENAI_API_KEY)
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")  # "openai" или "ollama"
 _MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gpt-4.1-mini")
+
+_openai_client = None
+if LLM_PROVIDER == "openai":
+    try:
+        from openai import OpenAI  # type: ignore
+    except Exception as e:
+        raise RuntimeError(
+            "Не удалось импортировать openai, а LLM_PROVIDER=openai. "
+            "Установи пакет: pip install openai"
+        ) from e
+
+    _OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not _OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY не задан, а LLM_PROVIDER=openai")
+
+    _openai_client = OpenAI(api_key=_OPENAI_API_KEY)
+
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 _langfuse = get_langfuse_client()
 
 
+# ---------- вспомогательные функции ----------
+
 def _extract_json(text: str) -> Dict[str, Any]:
-    """Парсинг JSON из ответа модели (включая ```json ... ``` форматы)."""
-    text = text.strip()
-    if text.startswith("```"):
-        start = text.find("{")
-        end = text.rfind("}")
-        if start != -1 and end != -1:
-            text = text[start : end + 1]
+    """
+    Ищет JSON-объект в ответе модели (включая ```json ... ``` и текст вокруг).
+    """
+    raw = text.strip()
+
+    if raw.startswith("```"):
+        raw = raw.strip("`").strip()
+
+    start = raw.find("{")
+    end = raw.rfind("}")
+
+    if start == -1 or end == -1 or start >= end:
+        raise ValueError(
+            "Ответ модели не содержит JSON-объект {...}. "
+            f"Фрагмент ответа: {raw[:200]}"
+        )
+
+    json_str = raw[start : end + 1]
+
     try:
-        return json.loads(text)
+        return json.loads(json_str)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Не удалось распарсить JSON из ответа LLM: {e}\n{text[:500]}")
+        raise ValueError(
+            f"Не удалось распарсить JSON из ответа LLM: {e}\n{json_str[:500]}"
+        )
 
 
 def _chat_completion(
@@ -45,7 +77,7 @@ def _chat_completion(
 ) -> Tuple[str, Dict[str, Optional[float]]]:
     """
     Один вызов LLM с retry и трассировкой в Langfuse.
-    Возвращает: (content, stats) — контент и словарь с latency/tokens.
+    Поддерживает провайдеров: openai, ollama.
     """
     last_error: Optional[Exception] = None
 
@@ -56,29 +88,69 @@ def _chat_completion(
                 trace = _langfuse.trace(
                     name=trace_name,
                     input={"messages": messages},
-                    metadata={"model": _MODEL_NAME, "attempt": attempt},
+                    metadata={
+                        "model": _MODEL_NAME,
+                        "provider": LLM_PROVIDER,
+                        "attempt": attempt,
+                    },
                 )
             except Exception:
                 trace = None
 
         start = time.perf_counter()
+
         try:
-            resp = _client.chat.completions.create(
-                model=_MODEL_NAME,
-                messages=messages,
-                temperature=0.4,
-            )
-            latency_ms = (time.perf_counter() - start) * 1000.0
+            # ---- OpenAI ----
+            if LLM_PROVIDER == "openai":
+                if _openai_client is None:
+                    raise RuntimeError("OpenAI-клиент не инициализирован")
 
-            content = resp.choices[0].message.content or ""
-            usage = getattr(resp, "usage", None)
+                resp = _openai_client.chat.completions.create(
+                    model=_MODEL_NAME,
+                    messages=messages,
+                    temperature=0.4,
+                )
+                latency_ms = (time.perf_counter() - start) * 1000.0
+                content = resp.choices[0].message.content or ""
 
-            stats = {
-                "latency_ms": float(latency_ms),
-                "prompt_tokens": float(getattr(usage, "prompt_tokens", 0) or 0),
-                "completion_tokens": float(getattr(usage, "completion_tokens", 0) or 0),
-                "total_tokens": float(getattr(usage, "total_tokens", 0) or 0),
-            }
+                usage = getattr(resp, "usage", None)
+                stats: Dict[str, Optional[float]] = {
+                    "latency_ms": float(latency_ms),
+                    "prompt_tokens": float(getattr(usage, "prompt_tokens", 0) or 0),
+                    "completion_tokens": float(
+                        getattr(usage, "completion_tokens", 0) or 0
+                    ),
+                    "total_tokens": float(getattr(usage, "total_tokens", 0) or 0),
+                }
+
+            # ---- Ollama ----
+            elif LLM_PROVIDER == "ollama":
+                ollama_messages = [
+                    {"role": m["role"], "content": m["content"]} for m in messages
+                ]
+                r = requests.post(
+                    f"{OLLAMA_HOST}/api/chat",
+                    json={
+                        "model": _MODEL_NAME,
+                        "messages": ollama_messages,
+                        "stream": False,
+                    },
+                    timeout=600,
+                )
+                r.raise_for_status()
+                data = r.json()
+                latency_ms = (time.perf_counter() - start) * 1000.0
+                content = data["message"]["content"]
+
+                stats = {
+                    "latency_ms": float(latency_ms),
+                    "prompt_tokens": None,
+                    "completion_tokens": None,
+                    "total_tokens": None,
+                }
+
+            else:
+                raise RuntimeError(f"Неизвестный LLM_PROVIDER: {LLM_PROVIDER}")
 
             if trace is not None:
                 try:
@@ -89,7 +161,7 @@ def _chat_completion(
 
             return content, stats
 
-        except Exception as e:  # сеть, лимиты и т.п.
+        except Exception as e:
             last_error = e
             if trace is not None:
                 try:
@@ -98,27 +170,22 @@ def _chat_completion(
                 except Exception:
                     pass
 
-            # если есть status_code и это явная клиентская ошибка — не ретраем
-            status = getattr(e, "status_code", None)
-            if status and status in (400, 401, 403, 404):
-                break
-
             if attempt < max_retries:
                 time.sleep(base_delay * (2 ** (attempt - 1)))
             else:
                 break
 
-    raise RuntimeError(f"Ошибка при вызове LLM после {max_retries} попыток: {last_error}")
+    raise RuntimeError(
+        f"Ошибка при вызове LLM после {max_retries} попыток: {last_error}"
+    )
 
+
+# ---------- публичные функции модели ----------
 
 def generate_deck(
     brief: str,
     config: PitchDeckPromptConfig,
 ) -> Dict[str, Any]:
-    """
-    Генерация полного дека.
-    Возвращает dict: {"slides": [...]}.
-    """
     deck, _ = generate_deck_with_stats(brief, config)
     return deck
 
@@ -127,11 +194,6 @@ def generate_deck_with_stats(
     brief: str,
     config: PitchDeckPromptConfig,
 ) -> Tuple[Dict[str, Any], Dict[str, Optional[float]]]:
-    """
-    То же, что generate_deck, но дополнительно возвращает stats:
-    latency_ms, prompt_tokens, completion_tokens, total_tokens.
-    Удобно для экспериментов в ноутбуке.
-    """
     if not brief or not brief.strip():
         raise ValueError("brief не должен быть пустым")
 
@@ -167,10 +229,6 @@ def regenerate_slide(
     slide_id: int,
     config: PitchDeckPromptConfig,
 ) -> Dict[str, Any]:
-    """
-    Перегенерация одного слайда по id.
-    Возвращает dict: {"id", "section", "title", "bullets"}.
-    """
     if slide_id <= 0:
         raise ValueError("slide_id должен быть > 0")
 

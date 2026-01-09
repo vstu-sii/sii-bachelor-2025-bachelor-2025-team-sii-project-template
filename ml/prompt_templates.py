@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 @dataclass
 class PitchDeckPromptConfig:
-    """Настройки генерации дека."""
+    """Настройки генерации питч-дека."""
     target_slide_count: int = 10
     tone: str = "formal"
     audience: str = "early-stage VC"
@@ -25,7 +25,7 @@ def build_deck_generation_messages(
 ) -> List[Dict[str, Any]]:
     """
     Промпт для генерации всего дека.
-    Здесь зашито требование обязательного слайда Market & Financials
+    Требует обязательный слайд Market & Financials
     с описанием графиков/диаграмм.
     """
     user_content = f"""
@@ -91,8 +91,7 @@ def build_slide_regeneration_messages(
     config: PitchDeckPromptConfig,
 ) -> List[Dict[str, Any]]:
     """
-    Промпт для перегенерации одного слайда с учётом всего дека.
-    Правило про Market & Financials здесь не дублируем — слайд уже есть в existing_deck.
+    Промпт для перегенерации одного слайда.
     """
     user_content = f"""
 You are improving a single slide inside an existing investor pitch deck.

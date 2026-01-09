@@ -1,54 +1,40 @@
+# scripts/generate_pptx_from_baseline.py
+
 from __future__ import annotations
 
-import os
 import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
-from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
-from pptx.dml.color import RGBColor
 
 from ml.models.baseline import generate_deck
 from ml.prompt_templates import PitchDeckPromptConfig
 
 
+# Краткое описание стартапа для генерации примера
 BRIEF = (
     "AI Pitch Deck Generator is a SaaS tool that helps startup founders "
     "generate investor-ready pitch decks from short textual briefs."
 )
 
-SECTION_IMAGE_FILES = {
-    "problem": "assets/problem.jpg",
-    "solution": "assets/solution.jpg",
-    "market": "assets/market.jpg",
-    "financial": "assets/financial.jpg",
-    "business model": "assets/solution.jpg",
-    "traction": "assets/market.jpg",
-    "team": "assets/team.jpg",
-    "ask": "assets/ask.jpg",
-}
 
-
-def get_local_image_for_section(section: str) -> Optional[str]:
-    s = section.lower()
-    for key, path in SECTION_IMAGE_FILES.items():
-        if key in s and os.path.exists(path):
-            return path
-    default_path = "assets/default.jpg"
-    if os.path.exists(default_path):
-        return default_path
-    return None
-
+# ---------- график для Market & Financials ----------
 
 def extract_numbers(text: str) -> List[float]:
+    """Пробуем вытащить числа из текста (для графика)."""
     nums = re.findall(r"\d+\.?\d*", text)
     return [float(n) for n in nums]
 
 
 def add_market_chart(slide, bullets: List[str]) -> None:
+    """
+    Столбчатый график для слайда Market & Financials.
+    Если нашли числа в тексте — используем их,
+    иначе рисуем условный TAM/SAM/SOM.
+    """
     joined = " ".join(bullets)
     numbers = extract_numbers(joined)
 
@@ -78,16 +64,18 @@ def add_market_chart(slide, bullets: List[str]) -> None:
     chart.category_axis.has_title = False
 
 
+# ---------- генерация презентации ----------
+
 def build_presentation(deck: Dict[str, Any], filename: str = "pitch_deck_generated.pptx") -> None:
     prs = Presentation()
 
-    # титульный
+    # Титульный слайд
     title_layout = prs.slide_layouts[0]
     slide0 = prs.slides.add_slide(title_layout)
     slide0.shapes.title.text = "AI Pitch Deck Generator"
     slide0.placeholders[1].text = "Auto-generated investor deck (baseline model)"
 
-    # контентные
+    # Контентные слайды
     bullet_layout = prs.slide_layouts[1]
 
     for s in deck["slides"]:
@@ -97,15 +85,17 @@ def build_presentation(deck: Dict[str, Any], filename: str = "pitch_deck_generat
 
         slide = prs.slides.add_slide(bullet_layout)
 
-        # заголовок
+        # Заголовок
         title_shape = slide.shapes.title
         title_shape.text = f"{section}: {title}"
         title_tf = title_shape.text_frame
         if title_tf.paragraphs:
             title_tf.paragraphs[0].font.size = Pt(30)
 
-        # текст слева
+        # Текстовый блок
         body = slide.placeholders[1]
+        # Немного смещаем и ограничиваем ширину,
+        # чтобы на Market & Financials справа было место под график
         body.left = Inches(0.7)
         body.top = Inches(2.0)
         body.width = Inches(5.8)
@@ -120,32 +110,10 @@ def build_presentation(deck: Dict[str, Any], filename: str = "pitch_deck_generat
             p.level = 0
             p.font.size = Pt(18)
 
-        # правый блок
-        img_left = Inches(7.0)
-        img_top = Inches(2.0)
-        img_width = Inches(3.3)
-        img_height = Inches(3.0)
-
+        # Только для Market & Financials добавляем график справа,
+        # для остальных слайдов — чистый текст.
         if "market" in section.lower() and "financial" in section.lower():
             add_market_chart(slide, bullets)
-        else:
-            img_path = get_local_image_for_section(section)
-            if img_path:
-                slide.shapes.add_picture(img_path, img_left, img_top, width=img_width)
-            else:
-                shape = slide.shapes.add_shape(
-                    MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
-                    img_left,
-                    img_top,
-                    img_width,
-                    img_height,
-                )
-                shape.text = "Image placeholder"
-                fill = shape.fill
-                fill.solid()
-                fill.fore_color.rgb = RGBColor(0xF0, 0xF0, 0xF0)
-                shape.line.width = Pt(1)
-                shape.text_frame.paragraphs[0].font.size = Pt(12)
 
     prs.save(filename)
     print(f"Presentation saved to: {filename}")

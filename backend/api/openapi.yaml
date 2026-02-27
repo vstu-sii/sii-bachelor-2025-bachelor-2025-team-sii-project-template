@@ -1,0 +1,631 @@
+openapi: 3.0.0
+info:
+  title: Cooking Assistant API
+  description: API для умного помощника в готовке с AI-анализом блюд
+  version: 1.0.0
+  contact:
+    name: Development Team
+    email: dev@cooking-assistant.com
+
+servers:
+  - url: https://api.cooking-assistant.com/v1
+    description: Production server
+  - url: https://staging-api.cooking-assistant.com/v1
+    description: Staging server
+
+tags:
+  - name: Authentication
+    description: Регистрация, авторизация, управление аккаунтом
+  - name: Dishes
+    description: Управление блюдами и анализ
+  - name: Statistics
+    description: Статистика и прогресс пользователя
+  - name: AI Processing
+    description: AI-анализ блюд
+
+paths:
+  # ==================== АУТЕНТИФИКАЦИЯ ====================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  example: "chef_alex"
+                email:
+                  type: string
+                  format: email
+                  example: "alex@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "securePassword123"
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User created successfully"
+                  userId:
+                    type: string
+                    example: "user_123"
+        '400':
+          description: Невалидные данные
+        '409':
+          description: Пользователь с таким email уже существует
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Неверные учетные данные
+
+  /auth/verify-email:
+    post:
+      tags: [Authentication]
+      summary: Подтверждение email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Токен подтверждения из email
+      responses:
+        '200':
+          description: Email успешно подтвержден
+        '400':
+          description: Невалидный или просроченный токен
+
+  # ==================== БЛЮДА ====================
+  /dishes:
+    post:
+      tags: [Dishes]
+      summary: Создание нового блюда для анализа
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - photo
+                - user_recipe_text
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                  description: Фото блюда (JPEG, PNG, max 10MB)
+                user_recipe_text:
+                  type: string
+                  minLength: 50
+                  maxLength: 2000
+                  example: "Паста карбонара: спагетти, бекон, яйца, пармезан..."
+                dish_type:
+                  type: string
+                  enum: [breakfast, lunch, dinner, dessert, baking, other]
+                  example: "dinner"
+      responses:
+        '202':
+          description: Блюдо принято в обработку
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dish_id:
+                    type: string
+                    example: "dish_abc123"
+                  status:
+                    type: string
+                    enum: [processing]
+                    example: "processing"
+                  estimated_time:
+                    type: integer
+                    description: Примерное время обработки в секундах
+                    example: 30
+        '413':
+          description: Файл слишком большой
+        '415':
+          description: Неподдерживаемый формат изображения
+
+    get:
+      tags: [Dishes]
+      summary: Получить историю блюд пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: dish_type
+          in: query
+          schema:
+            type: string
+            enum: [breakfast, lunch, dinner, dessert, baking, other]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [processing, ready, draft]
+      responses:
+        '200':
+          description: Список блюд пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dishes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dish'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /dishes/{dish_id}:
+    get:
+      tags: [Dishes]
+      summary: Получить информацию о блюде
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Информация о блюде
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dish'
+        '404':
+          description: Блюдо не найдено
+
+  /dishes/{dish_id}/analysis:
+    get:
+      tags: [Dishes]
+      summary: Получить результаты анализа блюда
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Результаты AI-анализа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '202':
+          description: Анализ еще в процессе
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "processing"
+                  progress:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    example: 75
+        '404':
+          description: Блюдо не найдено
+
+  # ==================== СТАТИСТИКА ====================
+  /statistics/overview:
+    get:
+      tags: [Statistics]
+      summary: Общая статистика пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Обзор статистики
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsOverview'
+
+  /statistics/dish-types/{dish_type}:
+    get:
+      tags: [Statistics]
+      summary: Статистика по конкретному типу блюд
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dish_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [breakfast, lunch, dinner, dessert, baking, other]
+      responses:
+        '200':
+          description: Детальная статистика по типу блюд
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DishTypeStatistics'
+
+  # ==================== AI PROCESSING ====================
+  /ai/analyze:
+    post:
+      tags: [AI Processing]
+      summary: Прямой запрос на анализ (для внутреннего использования)
+      description: |
+        Используется воркерами для отправки данных в AI-сервисы.
+        Не предназначен для прямого вызова из фронтенда.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dish_id
+                - image_url
+                - user_recipe_text
+              properties:
+                dish_id:
+                  type: string
+                image_url:
+                  type: string
+                  format: uri
+                user_recipe_text:
+                  type: string
+      responses:
+        '200':
+          description: Успешный анализ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '500':
+          description: Ошибка AI-сервиса
+
+# ==================== КОМПОНЕНТЫ ====================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user_123"
+        username:
+          type: string
+          example: "chef_alex"
+        email:
+          type: string
+          format: email
+          example: "alex@example.com"
+        created_at:
+          type: string
+          format: date-time
+        email_verified:
+          type: boolean
+          example: true
+
+    Dish:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "dish_abc123"
+        user_id:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        dish_type:
+          type: string
+          enum: [breakfast, lunch, dinner, dessert, baking, other]
+        user_recipe_text:
+          type: string
+        status:
+          type: string
+          enum: [draft, processing, ready]
+          example: "ready"
+        created_at:
+          type: string
+          format: date-time
+        analysis_result:
+          $ref: '#/components/schemas/AnalysisResult'
+
+    AnalysisResult:
+      type: object
+      properties:
+        appearance_score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        recipe_score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 3
+        appearance_feedback:
+          type: string
+          example: "Блюдо выглядит аппетитно, хорошая золотистая корочка"
+        recipe_feedback:
+          type: string
+          example: "Соответствует рецепту, но пропорции ингредиентов можно улучшить"
+        recommendations:
+          type: string
+          example: "Попробуйте уменьшить время приготовления на 2 минуты"
+        analyzed_at:
+          type: string
+          format: date-time
+
+    StatisticsOverview:
+      type: object
+      properties:
+        total_dishes:
+          type: integer
+          example: 42
+        average_appearance_score:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 5
+          example: 4.2
+        average_recipe_score:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 5
+          example: 3.8
+        by_dish_type:
+          type: array
+          items:
+            $ref: '#/components/schemas/DishTypeStats'
+
+    DishTypeStats:
+      type: object
+      properties:
+        dish_type:
+          type: string
+          example: "dinner"
+        count:
+          type: integer
+          example: 15
+        avg_appearance_score:
+          type: number
+          format: float
+          example: 4.5
+        avg_recipe_score:
+          type: number
+          format: float
+          example: 4.2
+        trend:
+          type: string
+          enum: [improving, stable, declining]
+          example: "improving"
+
+    DishTypeStatistics:
+      type: object
+      properties:
+        dish_type:
+          type: string
+        overall_stats:
+          $ref: '#/components/schemas/DishTypeStats'
+        recent_dishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dish'
+        ai_recommendations:
+          type: string
+          example: "Вы показываете стабильный прогресс в приготовлении ужинов..."
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 42
+        total_pages:
+          type: integer
+          example: 3
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "invalid_request"
+        message:
+          type: string
+          example: "Невалидные данные запроса"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Укажите корректный email"
+
+# ==================== RATE LIMITING ====================
+x-rate-limit:
+  # Глобальные лимиты
+  global:
+    requests: 1000
+    per_seconds: 3600
+    burst: 50
+  
+  # Лимиты по эндпоинтам
+  endpoints:
+    "/auth/*":
+      requests: 10
+      per_seconds: 300
+      burst: 3
+    "/dishes":
+      POST:
+        requests: 20
+        per_seconds: 3600
+        burst: 5
+      GET:
+        requests: 100
+        per_seconds: 3600
+        burst: 20
+    "/ai/analyze":
+      requests: 50
+      per_seconds: 3600
+      burst: 10
+  
+  # Лимиты по пользователям
+  user_tiers:
+    free:
+      daily_requests: 50
+      concurrent_analysis: 1
+    premium:
+      daily_requests: 500
+      concurrent_analysis: 3
+    pro:
+      daily_requests: 5000
+      concurrent_analysis: 10
+
+# ==================== ПРИМЕРЫ ЗАПРОСОВ ====================
+x-examples:
+  CreateDish:
+    request:
+      headers:
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        Content-Type: "multipart/form-data"
+      body:
+        photo: "[binary image data]"
+        user_recipe_text: "Паста карбонара: 200г спагетти, 100г бекона, 2 яйца, 50г пармезана. Варим пасту al dente, обжариваем бекон, смешиваем с пастой и яичной смесью."
+        dish_type: "dinner"
+    response:
+      status: 202
+      body:
+        dish_id: "dish_abc123"
+        status: "processing"
+        estimated_time: 30
+
+  GetAnalysisResult:
+    request:
+      headers:
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    response:
+      status: 200
+      body:
+        appearance_score: 4
+        recipe_score: 3
+        appearance_feedback: "Паста имеет аппетитный вид, хорошая текстура, но соус немного отделился"
+        recipe_feedback: "Основные ингредиенты соответствуют рецепту, но пропорции яиц и сыра можно скорректировать"
+        recommendations: "Для лучшей консистенции соуса попробуйте использовать 1 целое яйцо + 1 желток и добавлять сыр постепенно при помешивании"
+        analyzed_at: "2024-01-15T14:30:00Z"
+
+  GetStatistics:
+    request:
+      headers:
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    response:
+      status: 200
+      body:
+        total_dishes: 42
+        average_appearance_score: 4.2
+        average_recipe_score: 3.8
+        by_dish_type:
+          - dish_type: "dinner"
+            count: 15
+            avg_appearance_score: 4.5
+            avg_recipe_score: 4.2
+            trend: "improving"
+          - dish_type: "breakfast"
+            count: 10
+            avg_appearance_score: 3.8
+            avg_recipe_score: 3.5
+            trend: "stable"

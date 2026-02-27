@@ -1,0 +1,190 @@
+<mxfile>
+  <diagram id="0" name="Page-1">
+    <mxGraphModel dx="1426" dy="881" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Users Table -->
+        <mxCell id="users" value="users" style="swimlane;startSize=23;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="180" height="161" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_header" value="users" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_id" value="id serial (PK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry x="0" y="23" width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_name" value="name character varying(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry x="0" y="46" width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_email" value="email character varying(255)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry x="0" y="69" width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_passwd" value="passwd character varying(255)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry x="0" y="92" width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_indexes" value="--- INDEXES ---" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;fontStyle=1" vertex="1" parent="users">
+          <mxGeometry x="0" y="115" width="180" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_idx_email" value="idx_users_email (email)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="users">
+          <mxGeometry x="0" y="138" width="180" height="23" as="geometry"/>
+        </mxCell>
+        
+        <!-- Dishes Table -->
+        <mxCell id="dishes" value="dishes" style="swimlane;startSize=23;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="100" width="200" height="276" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_header" value="dishes" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_id" value="id serial (PK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="23" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_user_id" value="user_id integer (FK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="46" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_recipe_id" value="recipe_id integer (FK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="69" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_photo_url" value="photo_url character varying(500)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="92" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_dish_type" value="dish_type character varying(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="115" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_created_at" value="created_at timestamp" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="138" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_user_recipe_text" value="user_recipe_text text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="161" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_indexes" value="--- INDEXES ---" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;fontStyle=1" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="184" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_idx_user_id" value="idx_dishes_user_id (user_id)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="207" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_idx_recipe_id" value="idx_dishes_recipe_id (recipe_id)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="230" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="dishes_idx_created_at" value="idx_dishes_created_at (created_at)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="dishes">
+          <mxGeometry x="0" y="253" width="200" height="23" as="geometry"/>
+        </mxCell>
+        
+        <!-- Ratings Table -->
+        <mxCell id="ratings" value="ratings" style="swimlane;startSize=23;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="530" y="100" width="200" height="253" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_header" value="ratings" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_id" value="id serial (PK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="23" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_dish_id" value="dish_id integer (FK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="46" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_statistics_id" value="statistics_id integer (FK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="69" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_lim_appearance_desc" value="lim_appearance_desc text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="92" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_lim_recipe_desc" value="lim_recipe_desc text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="115" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_appearance_score" value="appearance_score smallint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="138" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_recipe_score" value="recipe_score smallint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="161" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_indexes" value="--- INDEXES ---" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;fontStyle=1" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="184" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_idx_dish_id" value="idx_ratings_dish_id (dish_id)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="207" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="ratings_idx_statistics_id" value="idx_ratings_statistics_id (statistics_id)" style="text;strokeColor=none;fillColor=#e6f3ff;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="ratings">
+          <mxGeometry x="0" y="230" width="200" height="23" as="geometry"/>
+        </mxCell>
+        
+        <!-- Statistics Table -->
+        <mxCell id="statistics" value="statistics" style="swimlane;startSize=23;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="780" y="100" width="200" height="184" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_header" value="statistics" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_id" value="id serial (PK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry x="0" y="23" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_dish_type" value="dish_type character varying(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry x="0" y="46" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_avg_appearance_score" value="avg_appearance_score numeric(3,2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry x="0" y="69" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_avg_recipe_score" value="avg_recipe_score numeric(3,2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry x="0" y="92" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="statistics_recommendations" value="recommendations text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="statistics">
+          <mxGeometry x="0" y="115" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <!-- Statistics indexes section removed as no specific indexes needed beyond PK -->
+        
+        <!-- Recipes Table -->
+        <mxCell id="recipes" value="recipes" style="swimlane;startSize=23;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="450" width="200" height="115" as="geometry"/>
+        </mxCell>
+        <mxCell id="recipes_header" value="recipes" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="recipes">
+          <mxGeometry width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="recipes_id" value="id serial (PK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="recipes">
+          <mxGeometry x="0" y="23" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="recipes_dish_type" value="dish_type character varying(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="recipes">
+          <mxGeometry x="0" y="46" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <mxCell id="recipes_recipe_text" value="recipe_text text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;html=1;" vertex="1" parent="recipes">
+          <mxGeometry x="0" y="69" width="200" height="23" as="geometry"/>
+        </mxCell>
+        <!-- Recipes indexes section removed as no specific indexes needed beyond PK -->
+        
+        <!-- Relationships -->
+        <!-- Users → Dishes -->
+        <mxCell id="relation1" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.2;dashed=1;" edge="1" parent="1" source="users" target="dishes">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="157" as="sourcePoint"/>
+            <mxPoint x="280" y="157" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Recipes → Dishes -->
+        <mxCell id="relation2" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;dashed=1;" edge="1" parent="1" source="recipes" target="dishes">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="380" y="450" as="sourcePoint"/>
+            <mxPoint x="380" y="376" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Dishes → Ratings -->
+        <mxCell id="relation3" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.25;entryX=0;entryY=0.25;dashed=1;" edge="1" parent="1" source="dishes" target="ratings">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="480" y="146" as="sourcePoint"/>
+            <mxPoint x="530" y="146" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Statistics → Ratings -->
+        <mxCell id="relation4" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.25;entryX=1;entryY=0.5;dashed=1;" edge="1" parent="1" source="statistics" target="ratings">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="780" y="146" as="sourcePoint"/>
+            <mxPoint x="730" y="169" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

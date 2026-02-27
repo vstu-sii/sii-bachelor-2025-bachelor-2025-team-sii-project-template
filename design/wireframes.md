@@ -1,0 +1,1 @@
+https://www.figma.com/design/3X6radG5GO2qBrfiddx1hv/cooking_assistant?node-id=6-383&t=nn1xOuOE6scHLKC4-0
